@@ -14,13 +14,13 @@ import {
 type Props = {
   defaultValues?: Partial<Section3Type>
   onBack?: () => void
-  onSubmit: (values: Section3Type) => void
+  onSubmit: (values: Section3Type) => void | Promise<void>
   submitLabel?: string
   showBack?: boolean
 }
 
 export function Section3({ defaultValues, onBack, onSubmit, submitLabel = 'Enviar', showBack = true }: Props) {
-  const { register, handleSubmit, watch, resetField, formState: { errors } } = useForm<Section3Type>({
+  const { register, handleSubmit, watch, resetField, reset, formState: { errors } } = useForm<Section3Type>({
     resolver: zodResolver(section3Schema),
     defaultValues: {
       nombreCompleto: '',
@@ -52,7 +52,15 @@ export function Section3({ defaultValues, onBack, onSubmit, submitLabel = 'Envia
 
   const grados = gradoOptions[nivel ?? ''] ?? []
 
-  const handleSubmitInternal = (values: Section3Type) => onSubmit(values)
+  const handleSubmitInternal = async (values: Section3Type) => {
+    try {
+      await onSubmit(values)
+      // Si no hubo error en onSubmit, limpiar el formulario a sus valores por defecto
+      reset()
+    } catch {
+      // Mantener los valores si onSubmit falla
+    }
+  }
 
   return (
     <form onSubmit={handleSubmit(handleSubmitInternal)} noValidate>
