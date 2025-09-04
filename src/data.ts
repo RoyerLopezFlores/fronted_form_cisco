@@ -1,11 +1,10 @@
 // Datos de ejemplo. Reemplace por data real si la tiene.
 import  {Region,Provincia, Distrito,DRE, Ugel}  from "./types";
 
-
-
-
-
-export const URL_SERVER = 'http://localhost:3000'
+// Base URL del backend: tomar de variable de entorno Vite (VITE_API_URL) con fallback local.
+// Se elimina el slash final si existe para evitar '//' al concatenar rutas.
+const RAW_API_URL = (import.meta.env.VITE_API_URL as string | undefined) || 'http://localhost:3000'
+export const URL_SERVER = RAW_API_URL.replace(/\/$/, '')
 export const getProvincias = async (id_region?: string) => {
   if(!id_region) return []
   const data = await fetch(`${URL_SERVER}/provincias?filter[where][departamentoId]=${id_region}`)
