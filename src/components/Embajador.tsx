@@ -82,12 +82,11 @@ export function Embajador({ defaultValues, onNext, showActions = true, mode = 'c
   const fetchProvincias = async () => {
     const provinciasData = await getProvincias(region)
     setProvinciasOpts(provinciasData)
-    if (defaultValues?.provincia) setValue('provincia', String(defaultValues.provincia))
   }
   const fetchDistritos = async () => {
     const distritosData = await getDistritos(provincia)
     setDistritosOpts(distritosData)
-    if (defaultValues?.distrito) setValue('distrito', String(defaultValues.distrito))
+    //if (defaultValues?.distrito) setValue('distrito', String(defaultValues.distrito))
   }
   const fetchUgeles = async () => {
     const ugelesData = await getUgeles(dre)
@@ -124,6 +123,15 @@ export function Embajador({ defaultValues, onNext, showActions = true, mode = 'c
     }
   },[regiones])
 
+  const firstProvOptsRef = useRef(true);
+  useEffect(()=>{
+    if (provinciasOpts.length === 0) return
+    if (firstProvOptsRef.current) {
+      firstProvOptsRef.current = false
+      if (defaultValues?.provincia) setValue('provincia', String(defaultValues.provincia))
+    }
+  },[provinciasOpts])
+
   const firstProvRef = useRef(true)
   useEffect(() => {
     if (!provincia) return
@@ -136,6 +144,15 @@ export function Embajador({ defaultValues, onNext, showActions = true, mode = 'c
     resetField('distrito')
     fetchDistritos()
   }, [provincia, resetField])
+
+  const firstDistritoOptsRef = useRef(true);
+  useEffect(()=>{
+    if (distritosOpts.length === 0) return
+    if (firstDistritoOptsRef.current) {
+      firstDistritoOptsRef.current = false
+      if (defaultValues?.distrito) setValue('distrito', String(defaultValues.distrito))
+    }
+  }, [distritosOpts])
 
   useEffect(() => {
     // limpiar campos condicionales segun perfil
