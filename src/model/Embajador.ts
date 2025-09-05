@@ -13,16 +13,16 @@ export type Embajador = {
 	edad?: number
 	tipo_de_documento_de_identificacion?: string
 	numero_de_documento_de_identificacion?: string
-	dre?: number | string
-	ugel?: number | string
+	dre?: number | string | null
+	ugel?: number | string | null
 	hora_agregado?: string
 	nombre_del_referente?: string
 	propietario_de_la_tarea?: string
 	calificaciones_ciberseguridad?: number
 	calificaciones_conciencia_digital?: number
-	id_region?: number
-	id_provincia?: number
-	id_distrito?: number
+	id_region?: number | null
+	id_provincia?: number | null
+	id_distrito?: number | null
 	cod_mod?: string
 }
 

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
   section1Schema,
@@ -15,6 +15,7 @@ import {
 import { getProvincias,getRegiones, getDistritos, getDres, getUgeles } from '../data'
 import { Region } from '../types'
 import type { Embajador as EmbajadorModel } from '../model/Embajador'
+import { set } from 'zod/v4'
 type Props = {
   defaultValues?: Partial<Section1Type>
   onNext: (values: Section1Type) => void
@@ -26,12 +27,13 @@ type Props = {
 
 export function Embajador({ defaultValues, onNext, showActions = true, mode = 'create', onUpdate, onPartialUpdate }: Props) {
   const {
-    register,
+  register,
     handleSubmit,
     watch,
     setValue,
     resetField,
   getValues,
+  control,
   formState: { errors, dirtyFields },
   } = useForm<Section1Type>({
     resolver: zodResolver(section1Schema),
@@ -68,6 +70,19 @@ export function Embajador({ defaultValues, onNext, showActions = true, mode = 'c
     // Rehidrata región si viene en defaults (asegura coincidencia tras cargar opciones)
     // Normaliza DRE por nombre -> id si los defaults vienen con nombre
     console.log(defaultValues,"Valores")
+
+    if (defaultValues?.region) {
+      console.log("Precargando provincias", defaultValues.region)
+      fetchProvincias(String(defaultValues.region))
+    }
+    if(defaultValues?.provincia){  
+      console.log("Precargando distritos", defaultValues.provincia)
+      fetchDistritos(String(defaultValues.provincia))
+    }
+    if (defaultValues?.dre) {
+      fetchUgeles(String(defaultValues.dre))
+    }
+    
     //if (defaultValues?.region) setValue('region', String(defaultValues.region))
     if (defaultValues?.dre && isNaN(Number(defaultValues.dre))) {
       
@@ -79,80 +94,30 @@ export function Embajador({ defaultValues, onNext, showActions = true, mode = 'c
       setValue('dre', String(defaultValues.dre))
     }
   }
-  const fetchProvincias = async () => {
-    const provinciasData = await getProvincias(region)
+  const fetchProvincias = async (id_region: string) => {
+    const provinciasData = await getProvincias(id_region)
+    
     setProvinciasOpts(provinciasData)
   }
-  const fetchDistritos = async () => {
-    const distritosData = await getDistritos(provincia)
+  const fetchDistritos = async (id_provincia: string) => {
+    const distritosData = await getDistritos(id_provincia)
     setDistritosOpts(distritosData)
     //if (defaultValues?.distrito) setValue('distrito', String(defaultValues.distrito))
   }
-  const fetchUgeles = async () => {
-    const ugelesData = await getUgeles(dre)
+  const fetchUgeles = async (dreId: string) => {
+    const ugelesData = await getUgeles(dreId)
     setUgelesOpts(ugelesData)
-    if (defaultValues?.ugel) setValue('ugel', String(defaultValues.ugel))
   }
   useEffect(() => {
     initFetch()
   }, [])
-
-  const firstRegionRef = useRef(true)
-  useEffect(() => {
-    if (!region) return
-    console.log(region,"Region", defaultValues,regiones, provinciasOpts)
-    if (firstRegionRef.current) {
-      firstRegionRef.current = false
-      // No limpiar en la primera carga, solo poblar opciones
-      fetchProvincias()
-      return
-    }
-    // limpiar provincia/distrito al cambiar región (interactivo)
-    resetField('provincia')
-    resetField('distrito')
-    fetchProvincias()
-    setDistritosOpts([])
-  }, [region, resetField])
-
-  const firstRegionOptsRef = useRef(true);
-  useEffect(()=>{
-    if (regiones.length === 0) return
-    if (firstRegionOptsRef.current) {
-      firstRegionOptsRef.current = false
-      if (defaultValues?.region) setValue('region', String(defaultValues.region))
-    }
-  },[regiones])
-
-  const firstProvOptsRef = useRef(true);
-  useEffect(()=>{
-    if (provinciasOpts.length === 0) return
-    if (firstProvOptsRef.current) {
-      firstProvOptsRef.current = false
-      if (defaultValues?.provincia) setValue('provincia', String(defaultValues.provincia))
-    }
-  },[provinciasOpts])
-
-  const firstProvRef = useRef(true)
-  useEffect(() => {
-    if (!provincia) return
-    if (firstProvRef.current) {
-      firstProvRef.current = false
-      fetchDistritos()
-      return
-    }
-    // limpiar distrito al cambiar provincia (interactivo)
-    resetField('distrito')
-    fetchDistritos()
-  }, [provincia, resetField])
-
-  const firstDistritoOptsRef = useRef(true);
-  useEffect(()=>{
-    if (distritosOpts.length === 0) return
-    if (firstDistritoOptsRef.current) {
-      firstDistritoOptsRef.current = false
-      if (defaultValues?.distrito) setValue('distrito', String(defaultValues.distrito))
-    }
-  }, [distritosOpts])
+  // Precargar dependencias según valores por defecto sin limpiar campos
+  //useEffect(() => {
+  //  if (region && provinciasOpts.length === 0) fetchProvincias(region)
+  //}, [region])
+  //useEffect(() => {
+  //  if (provincia && distritosOpts.length === 0) fetchDistritos(provincia)
+  //}, [provincia])
 
   useEffect(() => {
     // limpiar campos condicionales segun perfil
@@ -169,18 +134,9 @@ export function Embajador({ defaultValues, onNext, showActions = true, mode = 'c
     }
   }, [perfil, resetField])
 
-  const firstDreRef = useRef(true)
-  useEffect(() => {
-    if (!dre) return
-    if (firstDreRef.current) {
-      firstDreRef.current = false
-      fetchUgeles()
-      return
-    }
-    // limpiar UGEL al cambiar DRE (interactivo)
-    resetField('ugel')
-    fetchUgeles()
-  }, [dre, resetField])
+  //useEffect(() => {
+  //  if (dre && ugelesOpts.length === 0) fetchUgeles(dre)
+  //}, [dre])
 
   
 
@@ -210,9 +166,21 @@ export function Embajador({ defaultValues, onNext, showActions = true, mode = 'c
       if (Number.isFinite(tel)) partial.telefono = tel as number
       else partial.telefono = undefined
     }
-    if (isDirty('region')) partial.id_region = values.region ? Number(values.region) : undefined
-    if (isDirty('provincia')) partial.id_provincia = values.provincia ? Number(values.provincia) : undefined
-    if (isDirty('distrito')) partial.id_distrito = values.distrito ? Number(values.distrito) : undefined
+    // Región/Provincia/Distrito: enviar null explícito cuando se limpian, y nulificar dependientes
+    if (isDirty('region')) {
+      partial.id_region = values.region ? Number(values.region) : null
+      // Al cambiar región, provincia y distrito deben quedar sin valor en backend
+      partial.id_provincia = null
+      partial.id_distrito = null
+    }
+    if (isDirty('provincia')) {
+      partial.id_provincia = values.provincia ? Number(values.provincia) : null
+      // Al cambiar provincia, distrito debe quedar sin valor
+      partial.id_distrito = null
+    }
+    if (isDirty('distrito')) {
+      partial.id_distrito = values.distrito ? Number(values.distrito) : null
+    }
 
     // Perfil: si alguno de los dos cambia, recalcular
     if (isDirty('perfilEmbajador') || isDirty('perfilEmbajadorOtro')) {
@@ -221,8 +189,14 @@ export function Embajador({ defaultValues, onNext, showActions = true, mode = 'c
         : values.perfilEmbajador
     }
 
-    if (isDirty('dre')) partial.dre = values.dre
-    if (isDirty('ugel')) partial.ugel = values.ugel
+    // DRE/UGEL: enviar null cuando se limpian y nulificar UGEL si cambia DRE
+    if (isDirty('dre')) {
+      partial.dre = values.dre ? values.dre : null
+      partial.ugel = null
+    }
+    if (isDirty('ugel')) {
+      partial.ugel = values.ugel ? values.ugel : null
+    }
     if (isDirty('codigoModular')) partial.cod_mod = values.codigoModular
 
     return partial
@@ -285,38 +259,78 @@ export function Embajador({ defaultValues, onNext, showActions = true, mode = 'c
 
         <div className="col-6 field">
           <label>Región</label>
-          
-          
-        
-      <select {...register('region')}>
-            <option value="">Seleccione…</option>
-            {regiones.map((o) => {
-        return <option key={o.nombre} value={String(o.id)}>{o.nombre}</option>
-            })}
-          </select>
+          <Controller
+            name="region"
+            control={control}
+            render={({ field }) => (
+              <select
+                {...field}
+                onChange={(e) => {
+                  field.onChange(e)
+                  // Limpiar dependientes y cargar provincias
+                  resetField('provincia')
+                  resetField('distrito')
+                  setDistritosOpts([])
+                  fetchProvincias(e.target.value)
+                }}
+              >
+                <option value="">Seleccione…</option>
+                {regiones.map((o) => (
+                  <option key={o.nombre} value={String(o.id)}>{o.nombre}</option>
+                ))}
+              </select>
+            )}
+          />
           {errors.region && <span className="error">{errors.region.message}</span>}
         </div>
 
         <div className="col-6 field">
           <label>Provincia</label>
-      <select {...register('provincia')} disabled={!region}>
-            
-            <option value="">Seleccione…</option>
-            {provinciasOpts.map((o) => (
-        <option key={o.nombre} value={String(o.id)}>{o.nombre}</option>
-            ))}
-          </select>
+          <Controller
+            name="provincia"
+            control={control}
+            disabled = {!region}
+            render={({ field }) => (
+              <select
+                {...field}
+                disabled={!region}
+                onChange={(e) => {
+                  field.onChange(e)
+                  // Limpiar distrito y cargar distritos
+                  resetField('distrito')
+                  fetchDistritos(e.target.value)
+                }}
+              >
+                <option value="">Seleccione…</option>
+                {provinciasOpts.map((o) => (
+                  <option key={o.nombre} value={String(o.id)}>{o.nombre}</option>
+                ))}
+              </select>
+            )}
+          />
           {errors.provincia && <span className="error">{errors.provincia.message}</span>}
         </div>
 
         <div className="col-6 field">
           <label>Distrito</label>
-      <select {...register('distrito')} disabled={!provincia}>
-            <option value="">Seleccione…</option>
-            {distritosOpts.map((o) => (
-        <option key={o.id} value={String(o.id)}>{o.nombre}</option>
-            ))}
-          </select>
+          <Controller
+            name="distrito"
+            control={control}
+            render={({ field }) => (
+              <select
+                {...field}
+                disabled={!provincia || !region}
+                onChange={(e) => {
+                  field.onChange(e)
+                }}
+              >
+                <option value="">Seleccione…</option>
+                {distritosOpts.map((o) => (
+                  <option key={o.id} value={String(o.id)}>{o.nombre}</option>
+                ))}
+              </select>
+            )}
+          />
           {errors.distrito && <span className="error">{errors.distrito.message}</span>}
         </div>
 
@@ -344,22 +358,47 @@ export function Embajador({ defaultValues, onNext, showActions = true, mode = 'c
           <>
             <div className="col-6 field">
               <label>DRE/GRE</label>
-        <select {...register('dre')}>
-                <option value="">Seleccione…</option>
-                {dreOpts.map((o) => (
-          <option key={o.nombre} value={String(o.id)}>{o.nombre}</option>
-                ))}
-              </select>
+              <Controller
+                name="dre"
+                control={control}
+                render={({ field }) => (
+                  <select
+                    {...field}
+                    onChange={(e) => {
+                      field.onChange(e)
+                      resetField('ugel')
+                      fetchUgeles(e.target.value)
+                    }}
+                  >
+                    <option value="">Seleccione…</option>
+                    {dreOpts.map((o) => (
+                      <option key={o.nombre} value={String(o.id)}>{o.nombre}</option>
+                    ))}
+                  </select>
+                )}
+              />
               {errors.dre && <span className="error">{errors.dre.message}</span>}
             </div>
             <div className="col-6 field">
               <label>UGEL</label>
-              <select {...register('ugel')} disabled={!dre}>
-                <option value="">Seleccione…</option>
-                {ugelesOpts.map((o) => (
-                  <option key={o.nombre} value={o.nombre}>{o.nombre}</option>
-                ))}
-              </select>
+              <Controller
+                name="ugel"
+                control={control}
+                render={({ field }) => (
+                  <select
+                    {...field}
+                    disabled={!dre}
+                    onChange={(e) => {
+                      field.onChange(e)
+                    }}
+                  >
+                    <option value="">Seleccione…</option>
+                    {ugelesOpts.map((o) => (
+                      <option key={o.nombre} value={o.nombre}>{o.nombre}</option>
+                    ))}
+                  </select>
+                )}
+              />
               {errors.ugel && <span className="error">{errors.ugel.message}</span>}
             </div>
           </>
@@ -386,6 +425,7 @@ export function Embajador({ defaultValues, onNext, showActions = true, mode = 'c
                 e.preventDefault()
                 console.log('onSubmit', getValues(), defaultValues)
                 const partial = buildPartialPayload(getValues())
+                console.log('Partial payload', partial)
                 onPartialUpdate(partial)
               }}
               disabled={Object.keys(dirtyFields).length === 0}

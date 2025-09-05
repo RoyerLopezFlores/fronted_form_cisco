@@ -29,7 +29,9 @@ export default function EmbajadorPage() {
         onPartialUpdate={async (partial) => {
           try {
             console.log("Editando")
+            console.log("Partial update", partial)
             if (Object.keys(partial).length === 0) return
+            
             const updated = await updateEmbajador(embajador.id!, partial)
             const updated_embajador = await getEmbajadorById(embajador.id!)
             setEmbajador(updated_embajador)

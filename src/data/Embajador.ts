@@ -41,6 +41,7 @@ export async function createEmbajador(payload: Embajador): Promise<Embajador> {
 
 // PATCH /embajadores/{id}
 export async function updateEmbajador(id: number, payload: Partial<Embajador>): Promise<Embajador> {
+	console.log("Updating embajador", id, payload)
 	const res = await fetch(`${URL_SERVER}/embajadores/${id}`, {
 		method: 'PATCH',
 		headers: { 'Content-Type': 'application/json' },
