@@ -155,7 +155,6 @@ export function Section2({ defaultValues, onBack, onNext, showActions = true,
               https://escale.minedu.gob.pe/web/inicio/padron-de-iiee
             </a><br/>
             Copia el código modular y pégalo aquí.<br/>
-            Nota: En caso de no representar a ninguna IE, coloca 0000000
           </p>
         </div>
       </details>
