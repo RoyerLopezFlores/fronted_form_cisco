@@ -4,6 +4,7 @@ import { useEmbajador } from '../context/EmbajadorContext'
 import { EmbajadorBadge } from '../components/EmbajadorBadge'
 import { Section2 } from '../components/Section2'
 import { getReplicaById, updateReplica } from '../data/Replica'
+import { useNotifications } from '../components/Notifications'
 
 export default function ReplicaEditPage() {
   const { embajador } = useEmbajador()
@@ -12,6 +13,7 @@ export default function ReplicaEditPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [defaults, setDefaults] = useState<any | null>(null)
+  const { success, error: notifyError } = useNotifications()
 
   //if (!embajador) return <Navigate to="/login" replace />
 
@@ -86,9 +88,9 @@ export default function ReplicaEditPage() {
               hora_fin: val.horaFin || undefined,
               enlace_fotografias: val.fotosUrl || undefined,
             })
-            alert('Réplica actualizada')
+              success('Réplica actualizada')
           } catch (e: any) {
-            alert(e?.message || 'No se pudo actualizar la réplica')
+              notifyError(e?.message || 'No se pudo actualizar la réplica')
           }
         }}
       />

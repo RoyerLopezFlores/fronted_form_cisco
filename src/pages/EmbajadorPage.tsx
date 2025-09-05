@@ -4,9 +4,11 @@ import { Embajador } from '../components/Embajador'
 import { toSection1Defaults } from '../model/Embajador'
 import { getEmbajadorById, updateEmbajador, updateEmbajadorFromSection1 } from '../data/Embajador'
 import { EmbajadorBadge } from '../components/EmbajadorBadge'
+import { useNotifications } from '../components/Notifications'
 
 export default function EmbajadorPage() {
   const { embajador, setEmbajador } = useEmbajador()
+  const { success, error } = useNotifications()
   if (!embajador) return <Navigate to="/create_embajador" replace />
 
   return (
@@ -21,23 +23,23 @@ export default function EmbajadorPage() {
             const updated = await updateEmbajadorFromSection1(embajador.id!, val)
             const updated_embajador = await getEmbajadorById(embajador.id!)
             setEmbajador(updated_embajador)
-            alert('Datos actualizados')
+            success('Datos actualizados')
           } catch (e: any) {
-            alert(e?.message || 'No se pudo actualizar al embajador')
+            error(e?.message || 'No se pudo actualizar al embajador')
           }
         }}
         onPartialUpdate={async (partial) => {
           try {
-            console.log("Editando")
-            console.log("Partial update", partial)
+            //console.log("Editando")
+            //console.log("Partial update", partial)
             if (Object.keys(partial).length === 0) return
             
             const updated = await updateEmbajador(embajador.id!, partial)
             const updated_embajador = await getEmbajadorById(embajador.id!)
             setEmbajador(updated_embajador)
-            alert('Cambios actualizados')
+            success('Cambios actualizados')
           } catch (e: any) {
-            alert(e?.message || 'No se pudo actualizar parcialmente al embajador')
+            error(e?.message || 'No se pudo actualizar parcialmente al embajador')
           }
         }}
         onNext={() => {}}

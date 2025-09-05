@@ -1,14 +1,25 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useEmbajador } from '../context/EmbajadorContext'
+import { useNotifications } from './Notifications'
 
 type Props = { variant?: 'card' | 'inline' }
 
 export function EmbajadorBadge({ variant = 'card' }: Props) {
   const { embajador, logout } = useEmbajador()
   const navigate = useNavigate()
-  const onLogout = () => {
-    logout()
-    navigate('/login')
+  const { confirm } = useNotifications()
+  const onLogout = async () => {
+    const ok = await confirm({
+      title: 'Cerrar sesión',
+      message: '¿Quieres cerrar sesión?',
+      confirmLabel: 'Sí, salir',
+      cancelLabel: 'Cancelar',
+      destructive: true,
+    })
+    if (ok) {
+      logout()
+      navigate('/login')
+    }
   }
 
   if (!embajador) return null

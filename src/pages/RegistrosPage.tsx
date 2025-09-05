@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react'
-import { Navigate, useParams } from 'react-router-dom'
+import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { useEmbajador } from '../context/EmbajadorContext'
 import { EmbajadorBadge } from '../components/EmbajadorBadge'
 import { getReplicaById } from '../data/Replica'
 import { Section3 } from '../components/Section3'
 import { fromSection3ToRegistro } from '../model/Registro'
 import { createRegistro, getRegistrosByReplica } from '../data/Registro'
+import { useNotifications } from '../components/Notifications'
 
 export default function RegistrosPage() {
   const { embajador } = useEmbajador()
   const { id_replica } = useParams()
+  const navigate= useNavigate()
+  const { error: notifyError, success, confirm } = useNotifications()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [replicaInfo, setReplicaInfo] = useState<any | null>(null)
@@ -59,7 +62,23 @@ export default function RegistrosPage() {
     <div className="header">
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
       <h1>Registros de réplica #{id_replica}</h1>
-      <div className="muted">Código modular: {replicaInfo?.codigo_modular || '-'}</div>
+      <button
+        className="btn primary"
+        type="button"
+        onClick={async () => {
+          const ok = await confirm({
+            title: 'Finalizar',
+            message: '¿Deseas finalizar?',
+            confirmLabel: 'Sí, finalizar',
+            cancelLabel: 'Cancelar'
+          })
+          if (ok) {
+            navigate('/replicas/crear')
+          }
+        }}
+      >
+        Finalizar
+      </button>
     </div>
     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, padding: '0 16px' }}>
       <div className="muted">
@@ -71,6 +90,8 @@ export default function RegistrosPage() {
       <div className="muted">
         Fin: {replicaInfo?.hora_fin || '-'}
       </div>
+      <div className="muted">Código modular: {replicaInfo?.codigo_modular || '-'}</div>
+
     </div>
     </div>
   <Section3
@@ -79,9 +100,11 @@ export default function RegistrosPage() {
         onSubmit={async (val) => {
           try {
             await createRegistro(fromSection3ToRegistro(val, embajador!.id!,{ id_replica: Number(id_replica) }))
+            //Agrega el toast que diga "Registro agregado"
+            success('Registro agregado',1000)
             await reload(0)
           } catch (e: any) {
-            alert(e?.message || 'No se pudo agregar el registro')
+            notifyError(e?.message || 'No se pudo agregar el registro')
           }
         }}
       />

@@ -2,10 +2,12 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { useEmbajador } from '../context/EmbajadorContext'
 import { Embajador } from '../components/Embajador'
 import { submitEmbajadorFromSection1 } from '../data/Embajador'
+import { useNotifications } from '../components/Notifications'
 
 export default function CreateEmbajadorPage() {
   const { embajador, setEmbajador } = useEmbajador()
   const navigate = useNavigate()
+  const { error } = useNotifications()
   if (embajador) return <Navigate to="/embajador" replace />
 
   return (
@@ -19,7 +21,7 @@ export default function CreateEmbajadorPage() {
             setEmbajador(created)
             navigate('/embajador', { replace: true })
           } catch (e: any) {
-            alert(e?.message || 'No se pudo crear el embajador')
+            error(e?.message || 'No se pudo crear el embajador')
           }
         }}
       />
