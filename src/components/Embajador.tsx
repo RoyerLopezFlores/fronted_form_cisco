@@ -62,12 +62,13 @@ export function Embajador({ defaultValues, onNext, showActions = true, mode = 'c
   const initFetch = async () => {
     const regionesData = await getRegiones()
     setRegiones(regionesData)
-    // Rehidrata región si viene en defaults (asegura coincidencia tras cargar opciones)
-    if (defaultValues?.region) setValue('region', String(defaultValues.region))
+    
     const dresData = await getDres()
     setDreOpts(dresData)
+    // Rehidrata región si viene en defaults (asegura coincidencia tras cargar opciones)
     // Normaliza DRE por nombre -> id si los defaults vienen con nombre
     console.log(defaultValues,"Valores")
+    //if (defaultValues?.region) setValue('region', String(defaultValues.region))
     if (defaultValues?.dre && isNaN(Number(defaultValues.dre))) {
       
       const match = dresData.find((d) => d.nombre === defaultValues.dre)
@@ -100,6 +101,7 @@ export function Embajador({ defaultValues, onNext, showActions = true, mode = 'c
   const firstRegionRef = useRef(true)
   useEffect(() => {
     if (!region) return
+    console.log(region,"Region", defaultValues,regiones, provinciasOpts)
     if (firstRegionRef.current) {
       firstRegionRef.current = false
       // No limpiar en la primera carga, solo poblar opciones
@@ -112,6 +114,15 @@ export function Embajador({ defaultValues, onNext, showActions = true, mode = 'c
     fetchProvincias()
     setDistritosOpts([])
   }, [region, resetField])
+
+  const firstRegionOptsRef = useRef(true);
+  useEffect(()=>{
+    if (regiones.length === 0) return
+    if (firstRegionOptsRef.current) {
+      firstRegionOptsRef.current = false
+      if (defaultValues?.region) setValue('region', String(defaultValues.region))
+    }
+  },[regiones])
 
   const firstProvRef = useRef(true)
   useEffect(() => {
@@ -201,7 +212,7 @@ export function Embajador({ defaultValues, onNext, showActions = true, mode = 'c
   }
 
   const onSubmit = (values: Section1Type) => {
-    console.log('onSubmit', values)
+    
     if (mode === 'update' && onUpdate) return onUpdate(values)
     return onNext(values)
   }
@@ -356,6 +367,7 @@ export function Embajador({ defaultValues, onNext, showActions = true, mode = 'c
               className="btn ghost"
               onClick={(e) => {
                 e.preventDefault()
+                console.log('onSubmit', getValues(), defaultValues)
                 const partial = buildPartialPayload(getValues())
                 onPartialUpdate(partial)
               }}
