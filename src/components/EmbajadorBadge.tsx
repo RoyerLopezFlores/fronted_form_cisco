@@ -44,7 +44,7 @@ export function EmbajadorBadge({ variant = 'card' }: Props) {
         <div className="muted" style={{ fontSize: isInline ? 12 : 14 }}>{embajador.perfil}</div>
       </div>
   <div className="badge-actions" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <Link to="/embajador" className="btn ghost">Ver Datos</Link>
+        <Link to="/dashboard" className="btn ghost">Dashboard</Link>
         <Link to="/replica" className="btn ghost">Crear réplica</Link>
   <button className="btn danger" onClick={onLogout}>Salir</button>
       </div>

@@ -7,6 +7,7 @@ import EmbajadorPage from './pages/EmbajadorPage'
 import ReplicaCreatePage from './pages/ReplicaCreatePage'
 import ReplicaEditPage from './pages/ReplicaEditPage'
 import RegistrosPage from './pages/RegistrosPage'
+import DashboardEmbajador from './pages/DashboardEmbajador'
 
 export default function App() {
   const { embajador } = useEmbajador()
@@ -26,6 +27,7 @@ export default function App() {
         <Route path="/replica" element={<ReplicaCreatePage />} />
         <Route path="/replica/:id_replica" element={<ReplicaEditPage />} />
         <Route path="/registros/:id_replica" element={<RegistrosPage />} />
+        <Route path="/dashboard" element={<DashboardEmbajador />} />
         <Route path="*" element={<LoginPage />} />
       </Routes>
     </div>

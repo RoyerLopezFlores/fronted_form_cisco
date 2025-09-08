@@ -1,5 +1,6 @@
 import { URL_SERVER } from '../data'
 import type { Embajador } from '../model/Embajador'
+import type { Replica } from '../model/Replica'
 import { buildEmbajadorPayload, fromSection1ToEmbajador } from '../model/Embajador'
 import type { Section1, Section2 } from '../types'
 
@@ -82,3 +83,66 @@ export async function liberarEmbajadorByDocumento(_: string) {
 	}
 }
 
+// /embajadores/892/replicas?filter[limit]=10&filter[skip]=10
+// Tipo auxiliar: réplica con contador de registros
+export type ReplicaWithRegistrosCount = Replica & { registrosCount?: number }
+
+// GET /embajadores/{id}/replicas?filter[limit]=..&filter[skip]=..
+// Devuelve la lista de réplicas del embajador con el campo registrosCount incluido por el backend
+export async function getEmbajadorReplicas(
+    idEmbajador: number,
+    opts?: { limit?: number; skip?: number; order?: string }
+): Promise<ReplicaWithRegistrosCount[]> {
+    const params = new URLSearchParams()
+    if (opts?.limit != null) params.set('filter[limit]', String(opts.limit))
+    if (opts?.skip != null) params.set('filter[skip]', String(opts.skip))
+    if (opts?.order) params.set('filter[order]', opts.order)
+    const qs = params.toString()
+    const url = `${URL_SERVER}/embajadores/${idEmbajador}/replicas${qs ? `?${qs}` : ''}`
+    const res = await fetch(url)
+    return handleJson<ReplicaWithRegistrosCount[]>(res)
+}
+
+/*
+[
+    {
+        "id": 6,
+        "codigo_modular": "00000",
+        "dre": "DRE CUSCO",
+        "ugel": "UGEL PAUCARTAMBO",
+        "fecha": "2025-09-03T05:00:00.000Z",
+        "hora_inicio": "15:39:00",
+        "hora_fin": "18:39:00",
+        "enlace_fotografias": "http://127.0.0.1:3000/",
+        "create_at": "2025-09-03T19:38:31.763Z",
+        "id_embajador": 892,
+        "registrosCount": 2
+    },
+    {
+        "id": 7,
+        "codigo_modular": "415547",
+        "dre": "DRE ANCASH",
+        "ugel": "UGEL HUARAZ",
+        "fecha": "2025-09-03T05:00:00.000Z",
+        "hora_inicio": "17:31:00",
+        "hora_fin": "17:32:00",
+        "enlace_fotografias": "http://127.0.0.1:3000/1",
+        "create_at": "2025-09-03T22:29:44.997Z",
+        "id_embajador": 892,
+        "registrosCount": 2
+    },
+    {
+        "id": 9,
+        "codigo_modular": "00000",
+        "dre": "Sin DRE",
+        "ugel": "Sin UGEL",
+        "fecha": "2025-09-05T05:00:00.000Z",
+        "hora_inicio": "17:54:00",
+        "hora_fin": "18:55:00",
+        "enlace_fotografias": "http://127.0.0.1:3000/",
+        "create_at": "2025-09-05T21:53:16.981Z",
+        "id_embajador": 892,
+        "registrosCount": 6
+    }
+]
+*/

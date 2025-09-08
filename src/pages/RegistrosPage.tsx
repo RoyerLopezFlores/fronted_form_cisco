@@ -73,7 +73,7 @@ export default function RegistrosPage() {
             cancelLabel: 'Cancelar'
           })
           if (ok) {
-            navigate('/replicas/crear')
+            navigate('/dashboard')
           }
         }}
       >
@@ -137,11 +137,15 @@ export default function RegistrosPage() {
             </tbody>
           </table>
         </div>
-        <div className="actions" style={{ justifyContent: 'space-between' }}>
-          <button className="btn ghost" type="button" disabled={skip === 0} onClick={() => reload(Math.max(0, skip - PAGE_SIZE))}>Anterior</button>
-          <span className="muted">Página {Math.floor(skip / PAGE_SIZE) + 1}</span>
-          <button className="btn ghost" type="button" disabled={!hasMore} onClick={() => reload(skip + PAGE_SIZE)}>Siguiente</button>
-        </div>
+          <div className="actions" style={{ justifyContent: 'space-between' }}>
+            {skip > 0 ? (
+              <button className="btn ghost" type="button" onClick={() => reload(Math.max(0, skip - PAGE_SIZE))}>Anterior</button>
+            ) : <span />}
+            <span className="muted">Página {Math.floor(skip / PAGE_SIZE) + 1}</span>
+            {hasMore ? (
+              <button className="btn ghost" type="button" onClick={() => reload(skip + PAGE_SIZE)}>Siguiente</button>
+            ) : <span />}
+          </div>
       </div>
     </div>
   )

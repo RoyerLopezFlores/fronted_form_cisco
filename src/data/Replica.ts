@@ -42,3 +42,18 @@ export async function updateReplica(id: number, payload: Partial<Replica>): Prom
   })
   return handleJson<Replica>(res)
 }
+
+/**
+ * Get the total number of replicas created by an embajador.
+ * Uses LoopBack's /count endpoint with a where filter.
+ */
+export async function countReplicasByEmbajador(idEmbajador: number): Promise<number> {
+  ///replicas/count?filter[where][id_embajador]=892
+  //const where = encodeURIComponent(JSON.stringify({ id_embajador: idEmbajador }))
+  const res = await fetch(`${URL_SERVER}/replicas/count?filter[where][id_embajador]=${idEmbajador}`)
+  const data = await handleJson<{ count: number }>(res)
+  return data.count
+}
+
+
+
