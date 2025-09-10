@@ -5,6 +5,7 @@ import { useEmbajador } from '../context/EmbajadorContext'
 import { useNotifications } from '../components/Notifications'
 import { getEmbajadorReplicas, type ReplicaWithRegistrosCount } from '../data/Embajador'
 import { countReplicasByEmbajador } from '../data/Replica'
+import { countRegistrosByEmbajador } from '../data/Registro'
 
 export default function DashboardEmbajador() {
   const { embajador } = useEmbajador()
@@ -16,6 +17,7 @@ export default function DashboardEmbajador() {
   const [skip, setSkip] = useState(0)
   const [hasMore, setHasMore] = useState(false)
   const [totalReplicas, setTotalReplicas] = useState<number>(0)
+  const [totalRegistros, setTotalRegistros] = useState<number>(0)
 
   // Guardar login
   if (!embajador) return <Navigate to="/login" replace />
@@ -53,11 +55,15 @@ export default function DashboardEmbajador() {
     const load = async () => {
       setLoading(true)
       try {
-        const [count] = await Promise.all([
+        const [replicasCount, registrosCount] = await Promise.all([
           countReplicasByEmbajador(embajador!.id!),
-          loadPage(0),
+          countRegistrosByEmbajador(embajador!.id!),
         ])
-        if (mounted) setTotalReplicas(count)
+        await loadPage(0)
+        if (mounted) {
+          setTotalReplicas(replicasCount)
+          setTotalRegistros(registrosCount)
+        }
       } catch (e: any) {
         setError(e?.message || 'Error cargando el dashboard')
       } finally {
@@ -83,7 +89,7 @@ export default function DashboardEmbajador() {
           <h3 style={{ marginTop: 0, marginBottom: 12 }}>Más datos del embajador</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
             {summary
-              .filter((item) => ['Perfil', 'Correo', 'Celular', 'Documento'].includes(item.label))
+              .filter((item) => ['Perfil', 'Correo', 'Celular', 'Documento','Sexo'].includes(item.label))
               .map((item) => (
                 <div key={item.label} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                   <span className="muted" style={{ fontSize: 12 }}>{item.label}</span>
@@ -97,14 +103,24 @@ export default function DashboardEmbajador() {
         </div>
 
         {/* Total réplicas */}
-        <div style={{ border: '1px solid #e5e7eb', borderRadius: 12, padding: 16, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 140, height: 140, borderRadius: '50%', border: '6px solid #111827', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
-              <div className="muted" style={{ fontSize: 12 }}>Total de réplicas</div>
-              <div style={{ fontSize: 40, fontWeight: 700, lineHeight: 1 }}>{totalReplicas}</div>
+        <div style={{ border: '1px solid #e5e7eb', borderRadius: 12, padding: 16, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12 }}>
+          {/* Círculo dividido en dos mitades */}
+          <div style={{ position: 'relative', width: 200, height: 200, borderRadius: '50%', border: '6px solid #111827', overflow: 'hidden', background: '#fff' }}>
+            {/* Línea horizontal */}
+            <div style={{ position: 'absolute', left: 10, right: 10, top: '50%', height: 2, background: '#111827', transform: 'translateY(-50%)' }} />
+            {/* Superior: réplicas */}
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', paddingTop: 8 }}>
+              <div className="muted" style={{ fontSize: 12, textAlign: 'center' }}>Total de réplicas</div>
+              <div style={{ fontSize: 40, fontWeight: 800, lineHeight: 1 }}>{totalReplicas.toLocaleString('es-PE')}</div>
             </div>
-            <Link to="/replica" className="btn primary">Crear réplica</Link>
+            {/* Inferior: beneficiarios */}
+            <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', paddingBottom: 8 }}>
+              <div className="muted" style={{ fontSize: 12, textAlign: 'center' }}>Total de beneficiarios</div>
+              <div style={{ fontSize: 40, fontWeight: 800, lineHeight: 1 }}>{totalRegistros.toLocaleString('es-PE')}</div>
+            </div>
           </div>
+          {/* Botón centrado debajo del círculo */}
+          <Link to="/replica" className="btn primary">Crear réplica</Link>
         </div>
       </div>
 

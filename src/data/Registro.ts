@@ -47,3 +47,8 @@ export async function getRegistrosByReplica(idReplica: number, limit = 5, skip =
   const items = await handleJson<Registro[]>(res)
   return { items, total: items.length }
 }
+export async function countRegistrosByEmbajador(idEmbajador: number): Promise<number> {
+  const res = await fetch(`${URL_SERVER}/registros/count?filter[where][id_embajador]=${idEmbajador}`)
+  const data = await handleJson<{ count: number }>(res)
+  return data.count
+}
