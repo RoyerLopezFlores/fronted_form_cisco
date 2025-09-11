@@ -99,6 +99,7 @@ export async function getEmbajadorReplicas(
     if (opts?.order) params.set('filter[order]', opts.order)
     const qs = params.toString()
     const url = `${URL_SERVER}/embajadores/${idEmbajador}/replicas${qs ? `?${qs}` : ''}`
+    console.log("Fetching replicas from URL:", url) // Debug log
     const res = await fetch(url)
     return handleJson<ReplicaWithRegistrosCount[]>(res)
 }

@@ -15,7 +15,6 @@ export default function DashboardEmbajador() {
   const [error, setError] = useState<string | null>(null)
   const [replicas, setReplicas] = useState<ReplicaWithRegistrosCount[]>([])
   const [skip, setSkip] = useState(0)
-  const [hasMore, setHasMore] = useState(false)
   const [totalReplicas, setTotalReplicas] = useState<number>(0)
   const [totalRegistros, setTotalRegistros] = useState<number>(0)
 
@@ -39,10 +38,8 @@ export default function DashboardEmbajador() {
 
   const loadPage = async (newSkip = 0) => {
     try {
-      // pedir 1 extra para saber si hay siguiente
-      const items = await getEmbajadorReplicas(embajador!.id!, { limit: PAGE_SIZE + 1, skip: newSkip, order: 'create_at DESC' })
-      setHasMore(items.length > PAGE_SIZE)
-      setReplicas(items.slice(0, PAGE_SIZE))
+      const items = await getEmbajadorReplicas(embajador!.id!, { limit: PAGE_SIZE, skip: newSkip, order: 'create_at DESC' })
+      setReplicas(items)
       setSkip(newSkip)
     } catch (e: any) {
       setError(e?.message || 'No se pudo cargar las réplicas')
@@ -78,7 +75,10 @@ export default function DashboardEmbajador() {
   if (loading) return <div className="container">Cargando…</div>
   if (error) return <div className="container"><EmbajadorBadge /><div className="error">{error}</div></div>
 
-  const hasPrev = skip > 0
+  const currentPage = Math.floor(skip / PAGE_SIZE) + 1
+  const totalPages = Math.max(1, Math.ceil(totalReplicas / PAGE_SIZE))
+  const hasPrev = currentPage > 1
+  const hasNext = currentPage < totalPages
 
   return (
     <div className="container">
@@ -161,8 +161,8 @@ export default function DashboardEmbajador() {
           {hasPrev ? (
             <button className="btn ghost" type="button" onClick={() => loadPage(Math.max(0, skip - PAGE_SIZE))}>Anterior página</button>
           ) : <span />}
-          <span className="muted">Página {Math.floor(skip / PAGE_SIZE) + 1}</span>
-          {hasMore ? (
+          <span className="muted">Página {currentPage} de {totalPages}</span>
+          {hasNext ? (
             <button className="btn ghost" type="button" onClick={() => loadPage(skip + PAGE_SIZE)}>Siguiente página</button>
           ) : <span />}
         </div>
